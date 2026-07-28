@@ -1,0 +1,17 @@
+{
+  "pass": 51,
+  "fail": 1,
+  "other": 3,
+  "total_scored": 52,
+  "score": 98.08,
+  "min_score": 90.0,
+  "meets_floor": true,
+  "gate_pass": true,
+  "enforce": false,
+  "failures": [
+    "banner_etc_profiled_ssh_confirm"
+  ],
+  "regressions": [],
+  "baseline": null,
+  "openscap_line": "OpenSCAP: pass=51 fail=1 score=98.1% (target 90%)"
+}

@@ -3,34 +3,13 @@
 StigForge docker verify (OpenSCAP). Policy-exempt rules are excluded from the score denominator.
 Failure buckets follow stigready `poam-from-arf.py` classification (N/A / risk-accepted / gap).
 
-**Score:** 55.81% (floor 90.0%) — below floor
+**Score:** 98.08% (floor 90.0%) — meets floor
 
-## OpenSCAP failures — classified (19)
+## OpenSCAP failures — classified (1)
 
-### Gap - deterministic config (fixable in role) (6)
+### Gap - role vs SSG (scheduled remediation) (1)
 
-- `accounts_password_pam_unix_rounds_password_auth`
-- `accounts_passwords_pam_faillock_audit`
-- `accounts_passwords_pam_faillock_deny`
-- `accounts_passwords_pam_faillock_interval`
-- `accounts_passwords_pam_faillock_silent`
-- `accounts_passwords_pam_faillock_unlock_time`
-
-### Gap - role vs SSG (scheduled remediation) (13)
-
-- `account_disable_post_pw_expiration`
-- `accounts_max_concurrent_login_sessions`
-- `accounts_maximum_age_login_defs`
-- `accounts_minimum_age_login_defs`
-- `accounts_passwords_pam_faildelay_delay`
-- `accounts_umask_etc_login_defs`
 - `banner_etc_profiled_ssh_confirm`
-- `clean_components_post_updating`
-- `display_login_attempts`
-- `file_groupowner_var_log`
-- `file_permissions_var_log_stig`
-- `package_pam_pwquality_installed`
-- `set_password_hashing_algorithm_auth_stig`
 
 ## Policy exempt — not scored (34)
 
