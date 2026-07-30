@@ -2,6 +2,21 @@
 
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.2.4] - 2026-07-30
+
+### Changed
+- StigForge export refresh for `ubuntu24_stig` at `0.2.4`.
+
+### Verified (OpenSCAP)
+
+- **`stig`** — score **98.08%** (floor 90.0%) · gate **PASS** · evidence `20260729T223237Z`
+  - Remaining counted failures: `banner_etc_profiled_ssh_confirm`
+
+### Provenance
+
+- Factory pipeline: https://github.com/stigready/stigforge/actions/runs/30496236357
+- Factory commit: `7f7cafc85a392bf2a7eb04f1b979185dbcdf5530`
+
 ## [0.2.4-private-review] - 2026-07-29
 
 ### Changed
