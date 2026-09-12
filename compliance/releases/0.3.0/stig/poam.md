@@ -3,7 +3,7 @@
 StigForge docker verify (OpenSCAP). Policy-exempt rules are excluded from the score denominator.
 Failure buckets follow stigready `poam-from-arf.py` classification (N/A / risk-accepted / gap).
 
-**Score:** 98.08% (floor 90.0%) — meets floor
+**Score:** 96.55% (floor 90.0%) — meets floor
 
 ## OpenSCAP failures — classified (1)
 
