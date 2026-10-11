@@ -28,7 +28,6 @@ ubuntu24stig_aide_check_audit_tools: true
 ubuntu24stig_aide_disable_silentreports: true
 ubuntu24stig_aide_periodic_checking_systemd_timer: true
 ubuntu24stig_aide_periodic_cron_checking: true
-ubuntu24stig_always: true
 ubuntu24stig_audit_rules_dac_modification_chmod: true
 ubuntu24stig_audit_rules_dac_modification_chown: true
 ubuntu24stig_audit_rules_dac_modification_fchmod: true
