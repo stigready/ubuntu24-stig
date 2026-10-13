@@ -3765,7 +3765,6 @@
     ansible.builtin.getent:
       database: group
       key: systemd-journal
-    ignore_errors: true
     when:
     - '"linux-base" in ansible_facts.packages'
     - dir_groupowner_system_journal_newgroup is undefined
@@ -3777,6 +3776,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the systemd-journal group is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -4090,7 +4090,6 @@
     ansible.builtin.getent:
       database: group
       key: systemd-journal
-    ignore_errors: true
     when:
     - '"linux-base" in ansible_facts.packages'
     - file_groupowner_system_journal_newgroup is undefined
@@ -4102,6 +4101,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the systemd-journal group is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -5043,7 +5043,6 @@
     ansible.builtin.getent:
       database: group
       key: syslog
-    ignore_errors: true
     when: file_groupowner_var_log_newgroup is undefined
     tags:
     - DISA-STIG-UBTU-24-700100
@@ -5053,6 +5052,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the syslog group is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -5105,7 +5105,6 @@
     ansible.builtin.getent:
       database: group
       key: adm
-    ignore_errors: true
     when: file_groupowner_var_log_syslog_newgroup is undefined
     tags:
     - DISA-STIG-UBTU-24-700130
@@ -5115,6 +5114,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the adm group is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -5148,7 +5148,6 @@
     ansible.builtin.getent:
       database: group
       key: root
-    ignore_errors: true
     when: file_groupowner_var_log_syslog_newgroup is undefined
     tags:
     - DISA-STIG-UBTU-24-700130
@@ -5158,6 +5157,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the root group is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -5274,7 +5274,6 @@
     ansible.builtin.getent:
       database: passwd
       key: syslog
-    ignore_errors: true
     tags:
     - DISA-STIG-UBTU-24-700140
     - configure_strategy
@@ -5283,6 +5282,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the syslog user is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -5314,7 +5314,6 @@
     ansible.builtin.getent:
       database: passwd
       key: root
-    ignore_errors: true
     when: file_owner_var_log_syslog_newown is undefined
     tags:
     - DISA-STIG-UBTU-24-700140
@@ -5324,6 +5323,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the root user is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
