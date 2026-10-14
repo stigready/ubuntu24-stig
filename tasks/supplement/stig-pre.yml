@@ -1,0 +1,14 @@
+# StigForge-owned prerequisite for the generated file_groupowner_var_log rule, run BEFORE the generated body.
+#
+# The generated "Ensure group owner on /var/log/" task builds its group variable from a getent lookup of the `syslog` group
+# and aborts ("'file_groupowner_var_log_newgroup' is undefined", ubuntu-24.04:stig 2026-10-14, one rescued fatal) when the
+# group does not exist yet. The supplement created it AFTER the body, too late. Create it first; the later task is idempotent.
+---
+- name: Ensure the syslog system group exists before the generated var/log ownership task
+  ansible.builtin.group:
+    name: syslog
+    system: true
+    state: present
+  tags:
+    - file_groupowner_var_log
+    - high_severity

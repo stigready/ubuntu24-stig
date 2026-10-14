@@ -15,6 +15,23 @@
   - stigforge
   - facts
 - block:
+  - name: Ensure the syslog system group exists before the generated var/log ownership task
+    ansible.builtin.group:
+      name: syslog
+      system: true
+      state: present
+    tags:
+    - file_groupowner_var_log
+    - high_severity
+  rescue:
+  - name: 'StigForge: continue after error in ''Ensure the syslog system group exists before the generated var/log ownership
+      task'' (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Ensure the syslog system group exists before the generated var/log ownership task'' raised an error
+        (module or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting system
+        state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24stig_file_groupowner_var_log | default(true) | bool)
+- block:
   - name: Ensure aide is installed
     ansible.builtin.package:
       name: aide
@@ -31985,3 +32002,295 @@
       msg: 'StigForge: ''Product hardening | Remove apport (nothing re-enables suid core dumps at boot)'' raised an error
         (module or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting system
         state independently.'
+- block:
+  - name: Define a read-only TMOUT for login shells (accounts_tmout)
+    ansible.builtin.copy:
+      dest: /etc/profile.d/tmout.sh
+      owner: root
+      group: root
+      mode: '0644'
+      content: '# StigReady: terminate an idle login shell (accounts_tmout)
+
+        TMOUT={{ var_accounts_tmout | default(''600'') }}
+
+        readonly TMOUT
+
+        export TMOUT
+
+        '
+    tags:
+    - accounts_tmout
+  rescue:
+  - name: 'StigForge: continue after error in ''Define a read-only TMOUT for login shells (accounts_tmout)'' (OpenSCAP is
+      the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Define a read-only TMOUT for login shells (accounts_tmout)'' raised an error (module or templating)
+        and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24stig_accounts_tmout | default(true) | bool)
+- block:
+  - name: Enable auditing from boot on the kernel command line - audit=1 (grub2_audit_argument)
+    ansible.builtin.lineinfile:
+      path: /etc/default/grub
+      regexp: ^(GRUB_CMDLINE_LINUX=")(?!(?:[^"]*\s)?audit=1(?:\s|"))([^"]*)"$
+      line: \1\2 audit=1"
+      backrefs: true
+    register: stigforge_stig_grub_audit
+    tags:
+    - grub2_audit_argument
+  rescue:
+  - name: 'StigForge: continue after error in ''Enable auditing from boot on the kernel command line - audit=1 (grub2_audit_argument)''
+      (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Enable auditing from boot on the kernel command line - audit=1 (grub2_audit_argument)'' raised an
+        error (module or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting
+        system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24stig_grub2_audit_argument | default(true) | bool)
+- block:
+  - name: Regenerate the GRUB configuration after the audit change (grub2_audit_argument)
+    ansible.builtin.command: update-grub
+    when: stigforge_stig_grub_audit is changed
+    changed_when: true
+    tags:
+    - grub2_audit_argument
+  rescue:
+  - name: 'StigForge: continue after error in ''Regenerate the GRUB configuration after the audit change (grub2_audit_argument)''
+      (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Regenerate the GRUB configuration after the audit change (grub2_audit_argument)'' raised an error
+        (module or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting system
+        state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24stig_grub2_audit_argument | default(true) | bool)
+- block:
+  - name: Configure auditd.conf space_left_action and log group (auditd_data_retention_space_left_action)
+    ansible.builtin.lineinfile:
+      path: /etc/audit/auditd.conf
+      regexp: ^\s*#?\s*{{ item.key }}\s*=
+      line: '{{ item.key }} = {{ item.value }}'
+    loop:
+    - key: space_left_action
+      value: email
+    - key: action_mail_acct
+      value: root
+    - key: log_group
+      value: root
+    loop_control:
+      label: '{{ item.key }}'
+    tags:
+    - auditd_data_retention_space_left_action
+  rescue:
+  - name: 'StigForge: continue after error in ''Configure auditd.conf space_left_action and log group (auditd_data_retention_space_left_action)''
+      (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Configure auditd.conf space_left_action and log group (auditd_data_retention_space_left_action)''
+        raised an error (module or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the
+        resulting system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24stig_auditd_data_retention_space_left_action | default(true)
+    | bool)
+- block:
+  - name: Make /var/log/audit private to root (file_permissions_var_log_audit_stig)
+    ansible.builtin.file:
+      path: /var/log/audit
+      state: directory
+      owner: root
+      group: root
+      mode: '0700'
+    tags:
+    - file_permissions_var_log_audit_stig
+    - file_group_ownership_var_log_audit_stig
+  rescue:
+  - name: 'StigForge: continue after error in ''Make /var/log/audit private to root (file_permissions_var_log_audit_stig)''
+      (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Make /var/log/audit private to root (file_permissions_var_log_audit_stig)'' raised an error (module
+        or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting system state
+        independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24stig_file_group_ownership_var_log_audit_stig | default(true)
+    | bool)
+- block:
+  - name: Find the audit log files
+    ansible.builtin.find:
+      paths: /var/log/audit
+      patterns: audit.log*
+      file_type: file
+    register: stigforge_stig_audit_logs
+    tags:
+    - file_permissions_var_log_audit_stig
+  rescue:
+  - name: 'StigForge: continue after error in ''Find the audit log files'' (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Find the audit log files'' raised an error (module or templating) and was skipped; continuing so
+        later rules still run. OpenSCAP evaluates the resulting system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24stig_file_permissions_var_log_audit_stig | default(true)
+    | bool)
+- block:
+  - name: Make the audit log files root:root 0600 (file_permissions_var_log_audit_stig)
+    ansible.builtin.file:
+      path: '{{ item.path }}'
+      owner: root
+      group: root
+      mode: '0600'
+    loop: '{{ stigforge_stig_audit_logs.files | default([]) }}'
+    loop_control:
+      label: '{{ item.path }}'
+    tags:
+    - file_permissions_var_log_audit_stig
+    - file_group_ownership_var_log_audit_stig
+  rescue:
+  - name: 'StigForge: continue after error in ''Make the audit log files root:root 0600 (file_permissions_var_log_audit_stig)''
+      (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Make the audit log files root:root 0600 (file_permissions_var_log_audit_stig)'' raised an error (module
+        or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting system state
+        independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24stig_file_group_ownership_var_log_audit_stig | default(true)
+    | bool)
+- block:
+  - name: Audit the use of modprobe (audit_rules_privileged_commands_modprobe)
+    ansible.builtin.copy:
+      dest: /etc/audit/rules.d/50-stigready-modprobe.rules
+      owner: root
+      group: root
+      mode: '0640'
+      content: '-w /sbin/modprobe -p x -k modules
+
+        '
+    register: stigforge_stig_modprobe_rule
+    tags:
+    - audit_rules_privileged_commands_modprobe
+  rescue:
+  - name: 'StigForge: continue after error in ''Audit the use of modprobe (audit_rules_privileged_commands_modprobe)'' (OpenSCAP
+      is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Audit the use of modprobe (audit_rules_privileged_commands_modprobe)'' raised an error (module or
+        templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24stig_audit_rules_privileged_commands_modprobe | default(true)
+    | bool)
+- block:
+  - name: Load the audit rules (audit_rules_privileged_commands_modprobe)
+    ansible.builtin.command: augenrules --load
+    when: stigforge_stig_modprobe_rule is changed
+    changed_when: true
+    tags:
+    - audit_rules_privileged_commands_modprobe
+  rescue:
+  - name: 'StigForge: continue after error in ''Load the audit rules (audit_rules_privileged_commands_modprobe)'' (OpenSCAP
+      is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Load the audit rules (audit_rules_privileged_commands_modprobe)'' raised an error (module or templating)
+        and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24stig_audit_rules_privileged_commands_modprobe | default(true)
+    | bool)
+- block:
+  - name: Override the systemd tmpfiles journal modes (dir_permissions_system_journal)
+    ansible.builtin.copy:
+      src: /usr/lib/tmpfiles.d/systemd.conf
+      dest: /etc/tmpfiles.d/systemd.conf
+      remote_src: true
+      owner: root
+      group: root
+      mode: '0644'
+      force: false
+    tags:
+    - dir_permissions_system_journal
+  rescue:
+  - name: 'StigForge: continue after error in ''Override the systemd tmpfiles journal modes (dir_permissions_system_journal)''
+      (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Override the systemd tmpfiles journal modes (dir_permissions_system_journal)'' raised an error (module
+        or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting system state
+        independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24stig_dir_permissions_system_journal | default(true)
+    | bool)
+- block:
+  - name: Set the journal directory mode to 2750 in the tmpfiles override (dir_permissions_system_journal)
+    ansible.builtin.replace:
+      path: /etc/tmpfiles.d/systemd.conf
+      regexp: ^(z\s+/(?:run|var)/log/journal(?:/%m)?\s+)2755(\s)
+      replace: \g<1>2750\2
+    register: stigforge_stig_journal_tmpfiles
+    tags:
+    - dir_permissions_system_journal
+  rescue:
+  - name: 'StigForge: continue after error in ''Set the journal directory mode to 2750 in the tmpfiles override (dir_permissions_system_journal)''
+      (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Set the journal directory mode to 2750 in the tmpfiles override (dir_permissions_system_journal)''
+        raised an error (module or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the
+        resulting system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24stig_dir_permissions_system_journal | default(true)
+    | bool)
+- block:
+  - name: Apply the journal modes now (dir_permissions_system_journal)
+    ansible.builtin.command: systemd-tmpfiles --create --prefix=/run/log/journal --prefix=/var/log/journal
+    when: stigforge_stig_journal_tmpfiles is changed
+    changed_when: true
+    tags:
+    - dir_permissions_system_journal
+  rescue:
+  - name: 'StigForge: continue after error in ''Apply the journal modes now (dir_permissions_system_journal)'' (OpenSCAP is
+      the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Apply the journal modes now (dir_permissions_system_journal)'' raised an error (module or templating)
+        and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24stig_dir_permissions_system_journal | default(true)
+    | bool)
+- block:
+  - name: Remove the public pool time sources (chronyd_server_directive)
+    ansible.builtin.lineinfile:
+      path: /etc/chrony/chrony.conf
+      regexp: ^\s*pool\s
+      state: absent
+    tags:
+    - chronyd_server_directive
+  rescue:
+  - name: 'StigForge: continue after error in ''Remove the public pool time sources (chronyd_server_directive)'' (OpenSCAP
+      is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Remove the public pool time sources (chronyd_server_directive)'' raised an error (module or templating)
+        and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24stig_chronyd_server_directive | default(true) | bool)
+- block:
+  - name: Configure the Amazon Time Sync Service as a chrony server (chronyd_server_directive, chronyd_specify_remote_server)
+    ansible.builtin.lineinfile:
+      path: /etc/chrony/chrony.conf
+      regexp: ^\s*server\s
+      line: server 169.254.169.123 prefer iburst minpoll 4 maxpoll 4
+      insertbefore: ^\s*confdir\s
+      firstmatch: true
+    tags:
+    - chronyd_server_directive
+    - chronyd_specify_remote_server
+  rescue:
+  - name: 'StigForge: continue after error in ''Configure the Amazon Time Sync Service as a chrony server (chronyd_server_directive,
+      chronyd_specify_remote_server)'' (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Configure the Amazon Time Sync Service as a chrony server (chronyd_server_directive, chronyd_specify_remote_server)''
+        raised an error (module or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the
+        resulting system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24stig_chronyd_specify_remote_server | default(true) |
+    bool)
+- block:
+  - name: Set the STIG-approved ordered sshd ciphers, key exchange and MACs
+    ansible.builtin.copy:
+      dest: /etc/ssh/sshd_config.d/05-stigready-crypto.conf
+      owner: root
+      group: root
+      mode: '0600'
+      content: 'Ciphers aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes128-ctr
+
+        KexAlgorithms ecdh-sha2-nistp521,ecdh-sha2-nistp384,ecdh-sha2-nistp256,diffie-hellman-group-exchange-sha256,diffie-hellman-group16-sha512,diffie-hellman-group14-sha256
+
+        MACs hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,hmac-sha2-512,hmac-sha2-256
+
+        '
+      validate: /usr/sbin/sshd -t -f %s
+    tags:
+    - sshd_approved_crypto_stigready
+  rescue:
+  - name: 'StigForge: continue after error in ''Set the STIG-approved ordered sshd ciphers, key exchange and MACs'' (OpenSCAP
+      is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Set the STIG-approved ordered sshd ciphers, key exchange and MACs'' raised an error (module or templating)
+        and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24stig_sshd_approved_crypto_stigready | default(true)
+    | bool)
