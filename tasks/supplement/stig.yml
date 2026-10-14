@@ -566,6 +566,9 @@
 
 # chronyd_server_directive / chronyd_specify_remote_server: chrony is installed, but Ubuntu's default config carries only `pool`
 # lines. Use the Amazon Time Sync Service, the AWS-recommended source reachable from every VPC.
+# Owner 2026-10-14: the AMI owner manages the time source. chronyd_specify_remote_server (UBTU-24-600160) is a
+# tracked exception (policy/products/ubuntu24_stig.yml, role README) because its allowed list is the DoD pool;
+# chronyd_server_directive and chronyd_or_ntpd_set_maxpoll, the same finding, still pass and stay enforced.
 - name: Remove the public pool time sources (chronyd_server_directive)
   ansible.builtin.lineinfile:
     path: /etc/chrony/chrony.conf
