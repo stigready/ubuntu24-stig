@@ -2,6 +2,7 @@
 accounts_password_pam_enforce_root
 auditd_audispd_configure_remote_server
 auditd_offload_logs
+banner_etc_profiled_ssh_confirm
 chronyd_specify_remote_server
 configure_opensc_card_drivers
 dconf_gnome_screensaver_idle_delay

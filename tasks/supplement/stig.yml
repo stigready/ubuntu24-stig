@@ -183,6 +183,11 @@
 # claim a compliance PASS we can't verify - do not hand-craft content solely to satisfy
 # the raw regex without a local oscap re-scan proving the match, per repo policy against
 # faking green.
+#
+# Owner 2026-10-14: the DoD banner is required and stays; the scanner's check is a tracked exception
+# (policy/products/ubuntu24_stig.yml `exempt:` and `exceptions:`, role README, POA&M). The exception strips the
+# generated task above, which writes the broken script; THIS supplement task is merged after that filter and is
+# the one that installs the banner. The full STIG text is contained in it (compared whole, 2026-10-14).
 - name: StigForge supplement - install the SSH login confirmation banner script (banner_etc_profiled_ssh_confirm)
   ansible.builtin.copy:
     dest: /etc/profile.d/ssh_confirm.sh
