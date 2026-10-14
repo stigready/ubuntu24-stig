@@ -109,12 +109,14 @@
   tags:
     - accounts_passwords_pam_faildelay_delay
 
+# The success=N jump depends on which pam-auth-update profiles are enabled (success=1 stock, success=2 once pam_pwhistory is in the
+# stack), so match any N and rewrite only the algorithm token. A regexp pinned to success=1 matched nothing on the built image and
+# lineinfile appended a SECOND pam_unix line (ubuntu-24.04:stig 2026-10-14), which the OVAL ("specified only once") rejects.
 - name: StigForge supplement - use sha512 + rounds for pam_unix.so password hashing (set_password_hashing_algorithm_auth_stig, accounts_password_pam_unix_rounds_password_auth)
-  ansible.builtin.lineinfile:
+  ansible.builtin.replace:
     path: /etc/pam.d/common-password
-    regexp: '^password\s+\[success=1 default=ignore\]\s+pam_unix\.so\b.*$'
-    line: "password\t[success=1 default=ignore]\tpam_unix.so obscure sha512 rounds=100000"
-    state: present
+    regexp: '^(password\s+\[success=\d+\s+default=ignore\]\s+pam_unix\.so\b.*?)\byescrypt\b(.*)$'
+    replace: '\1sha512 rounds=100000\2'
   when: '"libpam-runtime" in ansible_facts.packages'
   tags:
     - set_password_hashing_algorithm_auth_stig
@@ -513,10 +515,22 @@
   tags:
     - audit_rules_privileged_commands_modprobe
 
-- name: Load the audit rules (audit_rules_privileged_commands_modprobe)
-  ansible.builtin.command: augenrules --load
+# The generated audit_rules_immutable task writes -e 2 and a later generated task runs augenrules --load, so by now the kernel
+# audit configuration is locked and a further load exits 1 with no output (ubuntu-24.04:stig 2026-10-14). The rule file is on
+# disk and is loaded at boot; only that one case is skipped, any other augenrules failure still fails the task.
+- name: Load the audit rules unless the audit configuration is already immutable (audit_rules_privileged_commands_modprobe)
+  ansible.builtin.shell: |
+    set -eu
+    if auditctl -s | grep -q '^enabled 2'; then
+      echo "audit configuration is immutable; the rule loads at boot"
+      exit 0
+    fi
+    augenrules --load
+  args:
+    executable: /bin/bash
+  register: stigforge_stig_audit_load
   when: stigforge_stig_modprobe_rule is changed
-  changed_when: true
+  changed_when: "'immutable' not in stigforge_stig_audit_load.stdout"
   tags:
     - audit_rules_privileged_commands_modprobe
 
@@ -571,9 +585,20 @@
     - chronyd_server_directive
     - chronyd_specify_remote_server
 
-# sshd_use_approved_{ciphers,kex,macs}_ordered_stig: the OVAL compares the value to these exact strings. The generated task writes
-# a list containing 3des-cbc and rijndael-cbc@lysator.liu.se, which this OpenSSH rejects ("Bad SSH2 cipher spec"), so it fails
-# its own sshd -t validation and leaves nothing; these drop-ins are validated the same way and sort before 10-stigready.conf.
+# sshd_use_approved_{ciphers,kex,macs}_ordered_stig: the OVAL compares the value to these exact strings, in EVERY file under
+# sshd_config.d (ubuntu-24.04:stig 2026-10-14: 05-stigready-crypto.conf passed, the generated 00-complianceascode-hardening.conf
+# carried SSG's literal Kex list and a different MAC order, and failed the rule). stig-pre.yml sets sshd_approved_ciphers and
+# sshd_approved_macs so the generated tasks write the STIG values themselves (their default Ciphers list holds 3des-cbc and
+# rijndael-cbc@lysator.liu.se, which this OpenSSH rejects: "Bad SSH2 cipher spec"); KexAlgorithms is a literal in the generated
+# task, so it is corrected here. This drop-in stays as the single statement of the values and sorts before 10-stigready.conf.
+- name: Set the STIG-approved ordered sshd key exchange in the generated drop-in (sshd_use_approved_kex_ordered_stig)
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config.d/00-complianceascode-hardening.conf
+    regexp: '(?i)^\s*KexAlgorithms\s+'
+    line: 'KexAlgorithms ecdh-sha2-nistp521,ecdh-sha2-nistp384,ecdh-sha2-nistp256,diffie-hellman-group-exchange-sha256,diffie-hellman-group16-sha512,diffie-hellman-group14-sha256'
+  tags:
+    - sshd_use_approved_kex_ordered_stig
+
 - name: Set the STIG-approved ordered sshd ciphers, key exchange and MACs
   ansible.builtin.copy:
     dest: /etc/ssh/sshd_config.d/05-stigready-crypto.conf

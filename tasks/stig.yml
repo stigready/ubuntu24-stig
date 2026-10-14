@@ -32,6 +32,23 @@
         state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24stig_file_groupowner_var_log | default(true) | bool)
 - block:
+  - name: Use the STIG-approved ordered sshd cipher and MAC lists in the generated tasks
+    ansible.builtin.set_fact:
+      sshd_approved_ciphers: aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes128-ctr
+      sshd_approved_macs: hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,hmac-sha2-512,hmac-sha2-256
+    tags:
+    - sshd_use_approved_ciphers_ordered_stig
+    - sshd_use_approved_macs_ordered_stig
+  rescue:
+  - name: 'StigForge: continue after error in ''Use the STIG-approved ordered sshd cipher and MAC lists in the generated tasks''
+      (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Use the STIG-approved ordered sshd cipher and MAC lists in the generated tasks'' raised an error
+        (module or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting system
+        state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24stig_sshd_use_approved_ciphers_ordered_stig | default(true)
+    | bool)
+- block:
   - name: Ensure aide is installed
     ansible.builtin.package:
       name: aide
@@ -31651,11 +31668,10 @@
 - block:
   - name: StigForge supplement - use sha512 + rounds for pam_unix.so password hashing (set_password_hashing_algorithm_auth_stig,
       accounts_password_pam_unix_rounds_password_auth)
-    ansible.builtin.lineinfile:
+    ansible.builtin.replace:
       path: /etc/pam.d/common-password
-      regexp: ^password\s+\[success=1 default=ignore\]\s+pam_unix\.so\b.*$
-      line: "password\t[success=1 default=ignore]\tpam_unix.so obscure sha512 rounds=100000"
-      state: present
+      regexp: ^(password\s+\[success=\d+\s+default=ignore\]\s+pam_unix\.so\b.*?)\byescrypt\b(.*)$
+      replace: \1sha512 rounds=100000\2
     when: '"libpam-runtime" in ansible_facts.packages'
     tags:
     - set_password_hashing_algorithm_auth_stig
@@ -32185,18 +32201,23 @@
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24stig_audit_rules_privileged_commands_modprobe | default(true)
     | bool)
 - block:
-  - name: Load the audit rules (audit_rules_privileged_commands_modprobe)
-    ansible.builtin.command: augenrules --load
+  - name: Load the audit rules unless the audit configuration is already immutable (audit_rules_privileged_commands_modprobe)
+    ansible.builtin.shell: "set -eu\nif auditctl -s | grep -q '^enabled 2'; then\n  echo \"audit configuration is immutable;\
+      \ the rule loads at boot\"\n  exit 0\nfi\naugenrules --load\n"
+    args:
+      executable: /bin/bash
+    register: stigforge_stig_audit_load
     when: stigforge_stig_modprobe_rule is changed
-    changed_when: true
+    changed_when: '''immutable'' not in stigforge_stig_audit_load.stdout'
     tags:
     - audit_rules_privileged_commands_modprobe
   rescue:
-  - name: 'StigForge: continue after error in ''Load the audit rules (audit_rules_privileged_commands_modprobe)'' (OpenSCAP
-      is the score gate)'
+  - name: 'StigForge: continue after error in ''Load the audit rules unless the audit configuration is already immutable (audit_rules_privileged_commands_modprobe)''
+      (OpenSCAP is the score gate)'
     ansible.builtin.debug:
-      msg: 'StigForge: ''Load the audit rules (audit_rules_privileged_commands_modprobe)'' raised an error (module or templating)
-        and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting system state independently.'
+      msg: 'StigForge: ''Load the audit rules unless the audit configuration is already immutable (audit_rules_privileged_commands_modprobe)''
+        raised an error (module or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the
+        resulting system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24stig_audit_rules_privileged_commands_modprobe | default(true)
     | bool)
 - block:
@@ -32288,6 +32309,23 @@
         resulting system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24stig_chronyd_specify_remote_server | default(true) |
     bool)
+- block:
+  - name: Set the STIG-approved ordered sshd key exchange in the generated drop-in (sshd_use_approved_kex_ordered_stig)
+    ansible.builtin.lineinfile:
+      path: /etc/ssh/sshd_config.d/00-complianceascode-hardening.conf
+      regexp: (?i)^\s*KexAlgorithms\s+
+      line: KexAlgorithms ecdh-sha2-nistp521,ecdh-sha2-nistp384,ecdh-sha2-nistp256,diffie-hellman-group-exchange-sha256,diffie-hellman-group16-sha512,diffie-hellman-group14-sha256
+    tags:
+    - sshd_use_approved_kex_ordered_stig
+  rescue:
+  - name: 'StigForge: continue after error in ''Set the STIG-approved ordered sshd key exchange in the generated drop-in (sshd_use_approved_kex_ordered_stig)''
+      (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Set the STIG-approved ordered sshd key exchange in the generated drop-in (sshd_use_approved_kex_ordered_stig)''
+        raised an error (module or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the
+        resulting system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24stig_sshd_use_approved_kex_ordered_stig | default(true)
+    | bool)
 - block:
   - name: Set the STIG-approved ordered sshd ciphers, key exchange and MACs
     ansible.builtin.copy:
