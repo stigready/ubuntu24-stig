@@ -451,8 +451,21 @@
     - {key: log_group, value: root}
   loop_control:
     label: '{{ item.key }}'
+  register: stigforge_stig_auditd_conf
   tags:
     - auditd_data_retention_space_left_action
+
+# auditd reads log_group only when it starts; the running daemon still has Ubuntu's default (adm), so a log it rotates later
+# (max_log_file = 8 MB) is created root:adm 0640 after the permission tasks below have run. Restart it first so every file it
+# creates from now on is root:root 0600, then normalise what already exists (same defect as ubuntu-24.04:cis-l2, 2026-10-14).
+- name: Restart auditd so it creates logs with the new log_group (file_group_ownership_var_log_audit_stig)
+  ansible.builtin.service:
+    name: auditd
+    state: restarted
+  when: stigforge_stig_auditd_conf is changed
+  tags:
+    - file_permissions_var_log_audit_stig
+    - file_group_ownership_var_log_audit_stig
 
 - name: Make /var/log/audit private to root (file_permissions_var_log_audit_stig)
   ansible.builtin.file:
@@ -493,7 +506,7 @@
     dest: /etc/audit/rules.d/50-stigready-modprobe.rules
     owner: root
     group: root
-    mode: "0640"
+    mode: "0600"
     content: |
       -w /sbin/modprobe -p x -k modules
   register: stigforge_stig_modprobe_rule

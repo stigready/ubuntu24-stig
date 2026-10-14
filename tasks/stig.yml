@@ -32075,6 +32075,7 @@
       value: root
     loop_control:
       label: '{{ item.key }}'
+    register: stigforge_stig_auditd_conf
     tags:
     - auditd_data_retention_space_left_action
   rescue:
@@ -32085,6 +32086,24 @@
         raised an error (module or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the
         resulting system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24stig_auditd_data_retention_space_left_action | default(true)
+    | bool)
+- block:
+  - name: Restart auditd so it creates logs with the new log_group (file_group_ownership_var_log_audit_stig)
+    ansible.builtin.service:
+      name: auditd
+      state: restarted
+    when: stigforge_stig_auditd_conf is changed
+    tags:
+    - file_permissions_var_log_audit_stig
+    - file_group_ownership_var_log_audit_stig
+  rescue:
+  - name: 'StigForge: continue after error in ''Restart auditd so it creates logs with the new log_group (file_group_ownership_var_log_audit_stig)''
+      (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Restart auditd so it creates logs with the new log_group (file_group_ownership_var_log_audit_stig)''
+        raised an error (module or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the
+        resulting system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24stig_file_group_ownership_var_log_audit_stig | default(true)
     | bool)
 - block:
   - name: Make /var/log/audit private to root (file_permissions_var_log_audit_stig)
@@ -32150,7 +32169,7 @@
       dest: /etc/audit/rules.d/50-stigready-modprobe.rules
       owner: root
       group: root
-      mode: '0640'
+      mode: '0600'
       content: '-w /sbin/modprobe -p x -k modules
 
         '
