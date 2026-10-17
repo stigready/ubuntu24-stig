@@ -170,24 +170,13 @@
   tags:
     - file_groupowner_var_log
 
-# NOTE (tracked, not silently dropped): banner_etc_profiled_ssh_confirm's OVAL check
-# compiles the `var_ssh_confirm_text` Value directly as a PCRE pattern-match against
-# /etc/profile.d/*.sh. Confirmed via `oscap xccdf generate fix --fix-type bash` against
-# ssg-ubuntu2404-ds.xml (0.1.82) that upstream's OWN bash fix template is broken: its
-# step-2 `sed 's/(?:\[\\n\]+|(?:\\n)+)/\n/g'` never matches the Value's actual escaping
-# (GNU sed on the same base image leaves literal `(?:[n]+|(?:n)+)` tokens in the
-# generated /etc/profile.d/ssh_confirm.sh - i.e. running ComplianceAsCode's own
-# remediation produces a banner that fails its own check). This is an upstream
-# ComplianceAsCode/content defect, not a StigForge gap; we still install a correct,
-# human-readable banner below (real security value) rather than skip it, but do not
-# claim a compliance PASS we can't verify - do not hand-craft content solely to satisfy
-# the raw regex without a local oscap re-scan proving the match, per repo policy against
-# faking green.
-#
-# Owner 2026-10-14: the DoD banner is required and stays; the scanner's check is a tracked exception
-# (policy/products/ubuntu24_stig.yml `exempt:` and `exceptions:`, role README, POA&M). The exception strips the
-# generated task above, which writes the broken script; THIS supplement task is merged after that filter and is
-# the one that installs the banner. The full STIG text is contained in it (compared whole, 2026-10-14).
+# banner_etc_profiled_ssh_confirm (UBTU-24-200680). Decision 0069 (owner 2026-10-17): no exemption for an ssh rule, so the role meets it.
+# The OVAL captures the whole of /etc/profile.d/ssh_confirm.sh (pattern ^(.*)$, singleline) and pattern-matches it against
+# var_ssh_confirm_text (selector dod_default) used as the whole regex: every space is [\s\n]+ and every newline (?:[\n]+|(?:\\n)+).
+# After `read -p "` it requires at least three whitespace characters, the last two newlines: [\s\n]+ then two newline groups. The old
+# script had `read -p "` + two newlines and failed exactly there (ubuntu2404 stig v1.0.1 ARF: 'read -p "\n\nYou are accessing...').
+# The earlier exception blamed regex compilation; the cause was one missing blank line. The DoD text is unchanged; the prompt opens with
+# one more blank line. tests/unit/test_ubuntu24_ssh_confirm_banner.py matches this content against the datastream's own value.
 - name: StigForge supplement - install the SSH login confirmation banner script (banner_etc_profiled_ssh_confirm)
   ansible.builtin.copy:
     dest: /etc/profile.d/ssh_confirm.sh
@@ -200,6 +189,7 @@
       if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ]; then
               while true; do
                       read -p "
+
 
       You are accessing a U.S. Government (USG) Information System (IS) that is provided for
       USG-authorized use only.

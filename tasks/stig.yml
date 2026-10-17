@@ -31603,7 +31603,7 @@
       group: root
       mode: '0755'
       content: "#!/bin/bash\n\nif [ -n \"$SSH_CLIENT\" ] || [ -n \"$SSH_TTY\" ]; then\n        while true; do\n          \
-        \      read -p \"\n\nYou are accessing a U.S. Government (USG) Information System (IS) that is provided for\nUSG-authorized\
+        \      read -p \"\n\n\nYou are accessing a U.S. Government (USG) Information System (IS) that is provided for\nUSG-authorized\
         \ use only.\n\nBy using this IS (which includes any device attached to this IS), you consent to the\nfollowing conditions:\n\
         \n-The USG routinely intercepts and monitors communications on this IS for purposes\nincluding, but not limited to,\
         \ penetration testing, COMSEC monitoring, network\noperations and defense, personnel misconduct (PM), law enforcement\
