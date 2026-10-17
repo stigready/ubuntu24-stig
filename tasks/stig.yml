@@ -216,6 +216,33 @@
   - stigforge
   - facts
 - block:
+  - name: Ensure libpam-sss is installed
+    ansible.builtin.package:
+      name: libpam-sss
+      state: present
+    tags:
+    - DISA-STIG-UBTU-24-100650
+    - enable_strategy
+    - low_complexity
+    - low_disruption
+    - medium_severity
+    - no_reboot_needed
+    - package_pam_sss_installed
+  rescue:
+  - name: 'StigForge: continue after error in ''Ensure libpam-sss is installed'' (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Ensure libpam-sss is installed'' raised an error (module or templating) and was skipped; continuing
+        so later rules still run. OpenSCAP evaluates the resulting system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24stig_package_pam_sss_installed | default(true) | bool)
+- name: 'StigForge: refresh package facts after ''Ensure libpam-sss is installed'' installed a package (stigforge#83)'
+  ansible.builtin.package_facts:
+    manager: auto
+  tags:
+  - medium_severity
+  - always
+  - stigforge
+  - facts
+- block:
   - name: Ensure vlock is installed
     ansible.builtin.package:
       name: vlock
@@ -3794,6 +3821,131 @@
         continuing so later rules still run. OpenSCAP evaluates the resulting system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24stig_accounts_umask_etc_login_defs | default(true) |
     bool)
+- block:
+  - name: Ensure remote access methods are monitored in Rsyslog - Set Facts
+    ansible.builtin.set_fact:
+      conf_files:
+      - /etc/rsyslog.d/50-default.conf
+      remote_methods:
+      - selector: auth.*
+        regexp: ^.*auth\.\*.*$
+        log_path_name: secure
+      - selector: authpriv.*
+        regexp: ^.*authpriv\.\*.*$
+        log_path_name: secure
+      - selector: daemon.*
+        regexp: ^.*daemon\.\*.*$
+        log_path_name: messages
+    when:
+    - '"linux-base" in ansible_facts.packages'
+    - '"rsyslog" in ansible_facts.packages'
+    tags:
+    - DISA-STIG-UBTU-24-200090
+    - NIST-800-53-AC-17(1)
+    - configure_strategy
+    - low_complexity
+    - medium_disruption
+    - medium_severity
+    - no_reboot_needed
+    - rsyslog_remote_access_monitoring
+  rescue:
+  - name: 'StigForge: continue after error in ''Ensure remote access methods are monitored in Rsyslog - Set Facts'' (OpenSCAP
+      is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Ensure remote access methods are monitored in Rsyslog - Set Facts'' raised an error (module or templating)
+        and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24stig_rsyslog_remote_access_monitoring | default(true)
+    | bool)
+- block:
+  - name: Ensure remote access methods are monitored in Rsyslog - Ensure /etc/rsyslog.d/50-default.conf Exists
+    ansible.builtin.file:
+      path: '{{ conf_files.0 }}'
+      state: touch
+      mode: 420
+    when:
+    - '"linux-base" in ansible_facts.packages'
+    - '"rsyslog" in ansible_facts.packages'
+    tags:
+    - DISA-STIG-UBTU-24-200090
+    - NIST-800-53-AC-17(1)
+    - configure_strategy
+    - low_complexity
+    - medium_disruption
+    - medium_severity
+    - no_reboot_needed
+    - rsyslog_remote_access_monitoring
+  rescue:
+  - name: 'StigForge: continue after error in ''Ensure remote access methods are monitored in Rsyslog - Ensure /etc/rsyslog.d/50-default.conf
+      Exists'' (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Ensure remote access methods are monitored in Rsyslog - Ensure /etc/rsyslog.d/50-default.conf Exists''
+        raised an error (module or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the
+        resulting system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24stig_rsyslog_remote_access_monitoring | default(true)
+    | bool)
+- block:
+  - name: Ensure remote access methods are monitored in Rsyslog - Check for Existing Values in Conf Files
+    ansible.builtin.lineinfile:
+      path: '{{ item.1 }}'
+      regexp: '{{ item.0.regexp }}'
+      state: absent
+    check_mode: true
+    changed_when: false
+    register: remote_method_values
+    loop: '{{ remote_methods|product(conf_files)|list }}'
+    when:
+    - '"linux-base" in ansible_facts.packages'
+    - '"rsyslog" in ansible_facts.packages'
+    tags:
+    - DISA-STIG-UBTU-24-200090
+    - NIST-800-53-AC-17(1)
+    - configure_strategy
+    - low_complexity
+    - medium_disruption
+    - medium_severity
+    - no_reboot_needed
+    - rsyslog_remote_access_monitoring
+  rescue:
+  - name: 'StigForge: continue after error in ''Ensure remote access methods are monitored in Rsyslog - Check for Existing
+      Values in Conf Files'' (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Ensure remote access methods are monitored in Rsyslog - Check for Existing Values in Conf Files''
+        raised an error (module or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the
+        resulting system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24stig_rsyslog_remote_access_monitoring | default(true)
+    | bool)
+- block:
+  - name: Ensure remote access methods are monitored in Rsyslog - Configure /etc/rsyslog.d/50-default.conf With Proper Log
+      Paths
+    ansible.builtin.lineinfile:
+      path: /etc/rsyslog.d/50-default.conf
+      line: '{{ item.item.0.selector }} /var/log/{{ item.item.0.log_path_name }}'
+      insertafter: ^.*\/var\/log\/secure.*$
+      create: true
+      mode: 420
+    loop: '{{ remote_method_values.results }}'
+    when:
+    - '"linux-base" in ansible_facts.packages'
+    - '"rsyslog" in ansible_facts.packages'
+    - item.found == 0
+    tags:
+    - DISA-STIG-UBTU-24-200090
+    - NIST-800-53-AC-17(1)
+    - configure_strategy
+    - low_complexity
+    - medium_disruption
+    - medium_severity
+    - no_reboot_needed
+    - rsyslog_remote_access_monitoring
+  rescue:
+  - name: 'StigForge: continue after error in ''Ensure remote access methods are monitored in Rsyslog - Configure /etc/rsyslog.d/50-default.conf
+      With Proper Log Paths'' (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Ensure remote access methods are monitored in Rsyslog - Configure /etc/rsyslog.d/50-default.conf
+        With Proper Log Paths'' raised an error (module or templating) and was skipped; continuing so later rules still run.
+        OpenSCAP evaluates the resulting system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24stig_rsyslog_remote_access_monitoring | default(true)
+    | bool)
 - block:
   - name: Check that the systemd-journal group is defined
     ansible.builtin.getent:
