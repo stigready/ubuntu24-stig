@@ -32202,3 +32202,94 @@
         and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24stig_sshd_approved_crypto_stigready | default(true)
     | bool)
+- block:
+  - name: ufw | Default policy deny incoming, allow outgoing (check_ufw_active)
+    ansible.builtin.command: ufw default {{ item.policy }} {{ item.direction }}
+    loop:
+    - policy: deny
+      direction: incoming
+    - policy: allow
+      direction: outgoing
+    changed_when: true
+    tags:
+    - check_ufw_active
+    - medium_severity
+  rescue:
+  - name: 'StigForge: continue after error in ''ufw | Default policy deny incoming, allow outgoing (check_ufw_active)'' (OpenSCAP
+      is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''ufw | Default policy deny incoming, allow outgoing (check_ufw_active)'' raised an error (module or
+        templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24stig_check_ufw_active | default(true) | bool)
+- block:
+  - name: ufw | Rate-limit SSH (ufw_rate_limit) before enabling, so this session survives
+    ansible.builtin.command: ufw limit 22/tcp
+    changed_when: true
+    tags:
+    - ufw_rate_limit
+    - medium_severity
+  rescue:
+  - name: 'StigForge: continue after error in ''ufw | Rate-limit SSH (ufw_rate_limit) before enabling, so this session survives''
+      (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''ufw | Rate-limit SSH (ufw_rate_limit) before enabling, so this session survives'' raised an error
+        (module or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting system
+        state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24stig_ufw_rate_limit | default(true) | bool)
+- block:
+  - name: ufw | Enable ufw now and at boot (check_ufw_active)
+    ansible.builtin.command: ufw --force enable
+    changed_when: true
+    tags:
+    - check_ufw_active
+    - medium_severity
+  rescue:
+  - name: 'StigForge: continue after error in ''ufw | Enable ufw now and at boot (check_ufw_active)'' (OpenSCAP is the score
+      gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''ufw | Enable ufw now and at boot (check_ufw_active)'' raised an error (module or templating) and
+        was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24stig_check_ufw_active | default(true) | bool)
+- block:
+  - name: Smart card PAM | Install libpam-pkcs11 (smartcard_pam_enabled)
+    ansible.builtin.apt:
+      name: libpam-pkcs11
+      state: present
+    tags:
+    - smartcard_pam_enabled
+    - medium_severity
+  rescue:
+  - name: 'StigForge: continue after error in ''Smart card PAM | Install libpam-pkcs11 (smartcard_pam_enabled)'' (OpenSCAP
+      is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Smart card PAM | Install libpam-pkcs11 (smartcard_pam_enabled)'' raised an error (module or templating)
+        and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24stig_smartcard_pam_enabled | default(true) | bool)
+- name: 'StigForge: refresh package facts after ''Smart card PAM | Install libpam-pkcs11 (smartcard_pam_enabled)'' installed
+    a package (stigforge#83)'
+  ansible.builtin.package_facts:
+    manager: auto
+  tags:
+  - medium_severity
+  - always
+  - stigforge
+  - facts
+- block:
+  - name: Smart card PAM | Add pam_pkcs11 above pam_unix in common-auth (smartcard_pam_enabled)
+    ansible.builtin.lineinfile:
+      path: /etc/pam.d/common-auth
+      regexp: ^\s*auth\s+\[.*\]\s+pam_pkcs11\.so
+      line: auth    [success=2 default=ignore]    pam_pkcs11.so
+      insertbefore: ^\s*auth\s+.*pam_unix\.so
+      firstmatch: true
+    tags:
+    - smartcard_pam_enabled
+    - medium_severity
+  rescue:
+  - name: 'StigForge: continue after error in ''Smart card PAM | Add pam_pkcs11 above pam_unix in common-auth (smartcard_pam_enabled)''
+      (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Smart card PAM | Add pam_pkcs11 above pam_unix in common-auth (smartcard_pam_enabled)'' raised an
+        error (module or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting
+        system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24stig_smartcard_pam_enabled | default(true) | bool)

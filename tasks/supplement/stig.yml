@@ -610,3 +610,60 @@
     validate: /usr/sbin/sshd -t -f %s
   tags:
     - sshd_approved_crypto_stigready
+
+# ---------------------------------------------------------------------------------------------
+# check_ufw_active (UBTU-24-100310) and ufw_rate_limit (UBTU-24-600200): owner 2026-10-19, "Meet it: ufw on, SSH allowed". The
+# generated role installs ufw but never enables it (stigready ubuntu-24.04:stig 2026-10-18 failed check_ufw_active). ufw_rate_limit's
+# check fails any listening port that is "ALLOW IN", so SSH is LIMIT (ufw's rate limit: a source opening 6+ connections in 30 s is
+# refused for the rest of the window). Default deny incoming, allow outgoing. SSH is limited BEFORE enabling, so the session that
+# runs this is never cut. Customers open further ports with `ufw allow` / `ufw limit`.
+# ---------------------------------------------------------------------------------------------
+- name: ufw | Default policy deny incoming, allow outgoing (check_ufw_active)
+  ansible.builtin.command: "ufw default {{ item.policy }} {{ item.direction }}"
+  loop:
+    - { policy: deny, direction: incoming }
+    - { policy: allow, direction: outgoing }
+  changed_when: true
+  tags:
+    - check_ufw_active
+    - medium_severity
+
+- name: ufw | Rate-limit SSH (ufw_rate_limit) before enabling, so this session survives
+  ansible.builtin.command: ufw limit 22/tcp
+  changed_when: true
+  tags:
+    - ufw_rate_limit
+    - medium_severity
+
+- name: ufw | Enable ufw now and at boot (check_ufw_active)
+  ansible.builtin.command: ufw --force enable
+  changed_when: true
+  tags:
+    - check_ufw_active
+    - medium_severity
+
+# ---------------------------------------------------------------------------------------------
+# smartcard_pam_enabled (UBTU-24-400020; decision 0069: a PAM rule is met, never exempted). The OVAL needs libpam-pkcs11 installed and an
+# `auth [...] pam_pkcs11.so` line in /etc/pam.d/common-auth (stigready ubuntu-24.04:stig 2026-10-18 failed it). The STIG's line,
+# placed above pam_unix: `auth [success=2 default=ignore] pam_pkcs11.so`. With no card or no pam_pkcs11 configuration the module
+# returns an error that default=ignore skips, so password and key logins behave as before; a configured CAC login skips pam_unix and
+# pam_deny. Certificate trust (smartcard_configure_ca etc.) stays the customer's (smartcard-cac class).
+# ---------------------------------------------------------------------------------------------
+- name: Smart card PAM | Install libpam-pkcs11 (smartcard_pam_enabled)
+  ansible.builtin.apt:
+    name: libpam-pkcs11
+    state: present
+  tags:
+    - smartcard_pam_enabled
+    - medium_severity
+
+- name: Smart card PAM | Add pam_pkcs11 above pam_unix in common-auth (smartcard_pam_enabled)
+  ansible.builtin.lineinfile:
+    path: /etc/pam.d/common-auth
+    regexp: '^\s*auth\s+\[.*\]\s+pam_pkcs11\.so'
+    line: 'auth    [success=2 default=ignore]    pam_pkcs11.so'
+    insertbefore: '^\s*auth\s+.*pam_unix\.so'
+    firstmatch: true
+  tags:
+    - smartcard_pam_enabled
+    - medium_severity

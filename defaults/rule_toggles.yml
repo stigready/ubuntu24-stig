@@ -104,6 +104,7 @@ ubuntu24stig_auditd_data_retention_space_left_action: true
 ubuntu24stig_auditd_data_retention_space_left_percentage: '{{ ubuntu24stig_UBTU_24_900960 | default(true) }}'
 ubuntu24stig_banner_etc_issue_net: '{{ ubuntu24stig_UBTU_24_200640 | default(true) }}'
 ubuntu24stig_banner_etc_profiled_ssh_confirm: true
+ubuntu24stig_check_ufw_active: true
 ubuntu24stig_chronyd_or_ntpd_set_maxpoll: '{{ ubuntu24stig_UBTU_24_600160 | default(true) }}'
 ubuntu24stig_chronyd_server_directive: true
 ubuntu24stig_chronyd_specify_remote_server: true
@@ -165,6 +166,7 @@ ubuntu24stig_rsyslog_remote_access_monitoring: '{{ ubuntu24stig_UBTU_24_200090 |
 ubuntu24stig_service_auditd_enabled: '{{ ubuntu24stig_UBTU_24_100410 | default(true) }}'
 ubuntu24stig_service_kdump_disabled: '{{ ubuntu24stig_UBTU_24_600070 | default(true) }}'
 ubuntu24stig_service_rsyslog_enabled: '{{ ubuntu24stig_UBTU_24_100200 | default(true) }}'
+ubuntu24stig_smartcard_pam_enabled: true
 ubuntu24stig_special_service_block: '{{ (ubuntu24stig_UBTU_24_100050 | default(true) | bool) and (ubuntu24stig_UBTU_24_100660
   | default(true) | bool) and (ubuntu24stig_UBTU_24_100810 | default(true) | bool) }}'
 ubuntu24stig_ssh_use_approved_macs_ordered_stig: '{{ ubuntu24stig_UBTU_24_100860 | default(true) }}'
@@ -186,5 +188,6 @@ ubuntu24stig_sssd_offline_cred_expiration: '{{ ubuntu24stig_UBTU_24_400340 | def
 ubuntu24stig_sysctl_kernel_dmesg_restrict: '{{ ubuntu24stig_UBTU_24_600140 | default(true) }}'
 ubuntu24stig_sysctl_kernel_randomize_va_space: '{{ ubuntu24stig_UBTU_24_700310 | default(true) }}'
 ubuntu24stig_sysctl_net_ipv4_tcp_syncookies: '{{ ubuntu24stig_UBTU_24_600190 | default(true) }}'
+ubuntu24stig_ufw_rate_limit: true
 ubuntu24stig_vlock_installed: '{{ ubuntu24stig_UBTU_24_101000 | default(true) }}'
 ubuntu24stig_wireless_disable_interfaces: '{{ ubuntu24stig_UBTU_24_600230 | default(true) }}'
