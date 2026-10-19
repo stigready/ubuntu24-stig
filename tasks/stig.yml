@@ -32237,6 +32237,27 @@
         state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24stig_ufw_rate_limit | default(true) | bool)
 - block:
+  - name: ufw | Keep log_martians on when ufw applies its sysctl file at boot (sysctl_net_ipv4_conf_{all,default}_log_martians)
+    ansible.builtin.lineinfile:
+      path: /etc/ufw/sysctl.conf
+      regexp: ^\s*net/ipv4/conf/{{ item }}/log_martians\s*=
+      line: net/ipv4/conf/{{ item }}/log_martians=1
+    loop:
+    - all
+    - default
+    tags:
+    - sysctl_net_ipv4_conf_all_log_martians
+    - medium_severity
+  rescue:
+  - name: 'StigForge: continue after error in ''ufw | Keep log_martians on when ufw applies its sysctl file at boot (sysctl_net_ipv4_conf_{all,default}_log_martians)''
+      (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''ufw | Keep log_martians on when ufw applies its sysctl file at boot (sysctl_net_ipv4_conf_{all,default}_log_martians)''
+        raised an error (module or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the
+        resulting system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24stig_sysctl_net_ipv4_conf_all_log_martians | default(true)
+    | bool)
+- block:
   - name: ufw | Enable ufw now and at boot (check_ufw_active)
     ansible.builtin.command: ufw --force enable
     changed_when: true

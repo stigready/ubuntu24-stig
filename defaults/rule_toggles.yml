@@ -187,6 +187,7 @@ ubuntu24stig_sssd_enable_pam_services: '{{ ubuntu24stig_UBTU_24_400360 | default
 ubuntu24stig_sssd_offline_cred_expiration: '{{ ubuntu24stig_UBTU_24_400340 | default(true) }}'
 ubuntu24stig_sysctl_kernel_dmesg_restrict: '{{ ubuntu24stig_UBTU_24_600140 | default(true) }}'
 ubuntu24stig_sysctl_kernel_randomize_va_space: '{{ ubuntu24stig_UBTU_24_700310 | default(true) }}'
+ubuntu24stig_sysctl_net_ipv4_conf_all_log_martians: true
 ubuntu24stig_sysctl_net_ipv4_tcp_syncookies: '{{ ubuntu24stig_UBTU_24_600190 | default(true) }}'
 ubuntu24stig_ufw_rate_limit: true
 ubuntu24stig_vlock_installed: '{{ ubuntu24stig_UBTU_24_101000 | default(true) }}'

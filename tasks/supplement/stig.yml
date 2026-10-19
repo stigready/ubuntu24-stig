@@ -635,6 +635,23 @@
     - ufw_rate_limit
     - medium_severity
 
+# ufw applies /etc/ufw/sysctl.conf (IPT_SYSCTL in /etc/default/ufw) every time it starts -- at boot that is AFTER systemd-sysctl -- and
+# its stock file sets net/ipv4/conf/{all,default}/log_martians=0. With ufw enabled, the STIG/CIS value (1, written by the role to
+# /etc/sysctl.d) was undone on every boot: the EC2 boot gate failed stigready-kernel-sysctl-hardened on log_martians in both
+# partitions (ubuntu-24.04:stig leg 1b5c83a3e8a9, 2026-10-19). The SSG tasks that comment out conflicting ufw entries match the
+# dotted key, not ufw's slash form, so they miss it. Set ufw's own lines to 1. Its other entries match the STIG values.
+- name: ufw | Keep log_martians on when ufw applies its sysctl file at boot (sysctl_net_ipv4_conf_{all,default}_log_martians)
+  ansible.builtin.lineinfile:
+    path: /etc/ufw/sysctl.conf
+    regexp: '^\s*net/ipv4/conf/{{ item }}/log_martians\s*='
+    line: 'net/ipv4/conf/{{ item }}/log_martians=1'
+  loop:
+    - all
+    - default
+  tags:
+    - sysctl_net_ipv4_conf_all_log_martians
+    - medium_severity
+
 - name: ufw | Enable ufw now and at boot (check_ufw_active)
   ansible.builtin.command: ufw --force enable
   changed_when: true
