@@ -2,7 +2,7 @@
 
 **Ansible hardening role** for **Ubuntu 24.04 LTS** (DISA STIG). Suitable for playbooks, Packer/Ansible provisioners, and golden-image pipelines. Search keywords: `ansible`, `ansible-role`, `compliance`, `devsecops`, `disa`, `disa-stig`, `hardening`, `infrastructure`, `noble`, `openscap`, `security`, `stig`, `stigforge`, `ubuntu`.
 
-StigForge-exported Ansible role **`ubuntu24_stig`** · release **`0.3.45`**.
+StigForge-exported Ansible role **`ubuntu24_stig`** · release **`0.3.46`**.
 Matrix cell status: **`green`**.
 
 ## Install (Ansible Galaxy)
@@ -13,7 +13,7 @@ lives under `compliance/` and is not loaded when the role runs.
 From **Ansible Galaxy** (after import; namespace `stigready`):
 
 ```bash
-ansible-galaxy role install stigready.ubuntu24_stig,0.3.45
+ansible-galaxy role install stigready.ubuntu24_stig,0.3.46
 ```
 
 From **GitHub** (public):
@@ -23,7 +23,7 @@ From **GitHub** (public):
 roles:
   - src: https://github.com/stigready/ubuntu24-stig
     scm: git
-    version: v0.3.45   # or an immutable commit SHA
+    version: v0.3.46   # or an immutable commit SHA
     name: ubuntu24_stig
 ```
 
@@ -47,7 +47,7 @@ These rules are excluded from the OpenSCAP score gate. Most depend on the networ
 |---|---|---|---|
 | `chronyd_specify_remote_server` | UBTU-24-600160 | Configures the Amazon Time Sync Service (`server 169.254.169.123 prefer iburst minpoll 4 maxpoll 4`) as the chrony server and removes the public pool lines, so the `server` directive and `maxpoll` rules of the same finding pass. | Add your organisation's approved time server(s) as `server` lines under /etc/chrony/conf.d/, or replace the Amazon Time Sync line in /etc/chrony/chrony.conf. |
 
-Full artifacts per profile: `compliance/releases/0.3.45/<profile>/` (`score.json`, `results.xml`, `arf.xml`, `evidence.json`, `evidence-report.html`, `poam.md`).
+Full artifacts per profile: `compliance/releases/0.3.46/<profile>/` (`score.json`, `results.xml`, `arf.xml`, `evidence.json`, `evidence-report.html`, `poam.md`).
 
 ## Reports & review
 
@@ -60,7 +60,7 @@ Full artifacts per profile: `compliance/releases/0.3.45/<profile>/` (`score.json
 Re-run OpenSCAP in Docker and compare to this release's evidence:
 
 ```bash
-make prove RELEASE=0.3.45
+make prove RELEASE=0.3.46
 ```
 
 Or score your own `results.xml`: see **[compliance/README.md](compliance/README.md)**.
@@ -72,7 +72,7 @@ Or score your own `results.xml`: see **[compliance/README.md](compliance/README.
 
 ## Factory
 
-- Monorepo: [stigready/stigforge](https://github.com/stigready/stigforge) @ `6ed85ba2eedde29ff204b78c293555567bbcf3a1`
-- CI run: https://github.com/stigready/stigforge/actions/runs/39309190285
+- Monorepo: [stigready/stigforge](https://github.com/stigready/stigforge) @ `495048ce8cefef4a6672d1d40ce103f97954fa84`
+- CI run: https://github.com/stigready/stigforge/actions/runs/39458224893
 - Catalog: [https://stigready.com/#stigforge](https://stigready.com/#stigforge)
 
