@@ -170,13 +170,6 @@
   tags:
     - file_groupowner_var_log
 
-# banner_etc_profiled_ssh_confirm (UBTU-24-200680). Decision 0069 (owner 2026-10-17): no exemption for an ssh rule, so the role meets it.
-# The OVAL captures the whole of /etc/profile.d/ssh_confirm.sh (pattern ^(.*)$, singleline) and pattern-matches it against
-# var_ssh_confirm_text (selector dod_default) used as the whole regex: every space is [\s\n]+ and every newline (?:[\n]+|(?:\\n)+).
-# After `read -p "` it requires at least three whitespace characters, the last two newlines: [\s\n]+ then two newline groups. The old
-# script had `read -p "` + two newlines and failed exactly there (ubuntu2404 stig v1.0.1 ARF: 'read -p "\n\nYou are accessing...').
-# The earlier exception blamed regex compilation; the cause was one missing blank line. The DoD text is unchanged; the prompt opens with
-# one more blank line. tests/unit/test_ubuntu24_ssh_confirm_banner.py matches this content against the datastream's own value.
 - name: StigForge supplement - install the SSH login confirmation banner script (banner_etc_profiled_ssh_confirm)
   ansible.builtin.copy:
     dest: /etc/profile.d/ssh_confirm.sh
@@ -236,25 +229,6 @@
   tags:
     - file_groupowner_var_log
 
-# ---------------------------------------------------------------------------------------
-# Beyond-benchmark product hardening, moved out of the factory (decision 0021: StigForge
-# roles own ALL hardening).
-#
-# These are NOT required by this profile. Verified against the SSG datastream:
-#   - kernel_module_{dccp,freevxfs,hfs,hfsplus,jffs2,udf}_disabled are CIS rules, not STIG.
-#     Only cramfs (RHEL-09-231195), sctp (RHEL-09-213060) and tipc (RHEL-09-213065) are in
-#     the stig profile. On Ubuntu NONE of the nine are.
-#   - sysctl_fs_suid_dumpable is in anssi/ccn/hipaa/pci-dss on RHEL and CIS on Ubuntu -
-#     in neither the RHEL stig nor the RHEL cis profile.
-#
-# StigReady applies them to every hardened image anyway: CIS-grade module blacklisting and
-# suid-dump hardening on a STIG image costs nothing at runtime and is strictly safer. That
-# is a PRODUCT decision, which is why it lives in the role rather than being argued as a
-# benchmark requirement.
-#
-# Tagged DISA/CCE only where a real identifier exists. The rest carry no rule-id tag on
-# purpose - the generator derives a toggle from an SSG rule-id tag, and a product decision
-# is not a per-rule opt-out. Idempotent: harmless where the profile already covers a module.
 - name: Product hardening | Ensure kernel module 'cramfs' is disabled
   ansible.builtin.copy:
     dest: /etc/modprobe.d/cramfs.conf
@@ -659,13 +633,6 @@
     - check_ufw_active
     - medium_severity
 
-# ---------------------------------------------------------------------------------------------
-# smartcard_pam_enabled (UBTU-24-400020; decision 0069: a PAM rule is met, never exempted). The OVAL needs libpam-pkcs11 installed and an
-# `auth [...] pam_pkcs11.so` line in /etc/pam.d/common-auth (stigready ubuntu-24.04:stig 2026-10-18 failed it). The STIG's line,
-# placed above pam_unix: `auth [success=2 default=ignore] pam_pkcs11.so`. With no card or no pam_pkcs11 configuration the module
-# returns an error that default=ignore skips, so password and key logins behave as before; a configured CAC login skips pam_unix and
-# pam_deny. Certificate trust (smartcard_configure_ca etc.) stays the customer's (smartcard-cac class).
-# ---------------------------------------------------------------------------------------------
 - name: Smart card PAM | Install libpam-pkcs11 (smartcard_pam_enabled)
   ansible.builtin.apt:
     name: libpam-pkcs11
